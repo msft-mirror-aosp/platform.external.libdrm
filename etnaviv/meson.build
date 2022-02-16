@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 
-libdrm_etnaviv = library(
+libdrm_etnaviv = shared_library(
   'drm_etnaviv',
   [
     files(

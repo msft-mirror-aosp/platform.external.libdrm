@@ -48,8 +48,12 @@ drm_private void bo_del(struct etna_bo *bo)
 		drmHashDelete(bo->dev->name_table, bo->name);
 
 	if (bo->handle) {
+		struct drm_gem_close req = {
+			.handle = bo->handle,
+		};
+
 		drmHashDelete(bo->dev->handle_table, bo->handle);
-		drmCloseBufferHandle(bo->dev->fd, bo->handle);
+		drmIoctl(bo->dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
 	}
 
 	free(bo);
@@ -78,7 +82,12 @@ static struct etna_bo *bo_from_handle(struct etna_device *dev,
 	struct etna_bo *bo = calloc(sizeof(*bo), 1);
 
 	if (!bo) {
-		drmCloseBufferHandle(dev->fd, handle);
+		struct drm_gem_close req = {
+			.handle = handle,
+		};
+
+		drmIoctl(dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
+
 		return NULL;
 	}
 
