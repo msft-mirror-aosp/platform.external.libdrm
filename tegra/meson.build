@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-libdrm_tegra = library(
+libdrm_tegra = shared_library(
   'drm_tegra',
   [files('tegra.c'), config_file],
   include_directories : [inc_root, inc_drm],
