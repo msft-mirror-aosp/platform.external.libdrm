@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 
-libdrm_radeon = library(
+libdrm_radeon = shared_library(
   'drm_radeon',
   [
     files(

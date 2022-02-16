@@ -22,7 +22,6 @@ drmAuthMagic
 drmAvailable
 drmCheckModesettingSupported
 drmClose
-drmCloseBufferHandle
 drmCloseOnce
 drmCommandNone
 drmCommandRead
@@ -58,7 +57,6 @@ drmGetContextPrivateMapping
 drmGetContextTag
 drmGetDevice
 drmGetDevice2
-drmGetDeviceFromDevId
 drmGetDeviceNameFromFd
 drmGetDeviceNameFromFd2
 drmGetDevices
@@ -111,7 +109,6 @@ drmModeCrtcSetGamma
 drmModeDestroyPropertyBlob
 drmModeDetachMode
 drmModeDirtyFB
-drmModeFormatModifierBlobIterNext
 drmModeFreeConnector
 drmModeFreeCrtc
 drmModeFreeEncoder
@@ -199,5 +196,3 @@ drmUnmap
 drmUnmapBufs
 drmUpdateDrawableInfo
 drmWaitVBlank
-drmGetFormatModifierName
-drmGetFormatModifierVendor
