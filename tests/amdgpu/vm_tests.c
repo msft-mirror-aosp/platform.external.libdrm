@@ -30,9 +30,6 @@
 static  amdgpu_device_handle device_handle;
 static  uint32_t  major_version;
 static  uint32_t  minor_version;
-static  uint32_t  family_id;
-static  uint32_t  chip_id;
-static  uint32_t  chip_rev;
 
 static void amdgpu_vmid_reserve_test(void);
 static void amdgpu_vm_unaligned_map(void);
@@ -113,11 +110,7 @@ static void amdgpu_vmid_reserve_test(void)
 	r = amdgpu_query_gpu_info(device_handle, &gpu_info);
 	CU_ASSERT_EQUAL(r, 0);
 
-	family_id = device_handle->info.family_id;
-	chip_id = device_handle->info.chip_external_rev;
-	chip_rev = device_handle->info.chip_rev;
-
-	gc_ip_type = (asic_is_gfx_pipe_removed(family_id, chip_id, chip_rev)) ?
+	gc_ip_type = (asic_is_arcturus(gpu_info.asic_id)) ?
 			AMDGPU_HW_IP_COMPUTE : AMDGPU_HW_IP_GFX;
 
 	r = amdgpu_cs_ctx_create(device_handle, &context_handle);
