@@ -176,7 +176,11 @@ drm_public void exynos_bo_destroy(struct exynos_bo *bo)
 		munmap(bo->vaddr, bo->size);
 
 	if (bo->handle) {
-		drmCloseBufferHandle(bo->dev->fd, bo->handle);
+		struct drm_gem_close req = {
+			.handle = bo->handle,
+		};
+
+		drmIoctl(bo->dev->fd, DRM_IOCTL_GEM_CLOSE, &req);
 	}
 
 	free(bo);
