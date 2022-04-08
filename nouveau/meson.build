@@ -52,11 +52,8 @@ pkg.generate(
 )
 
 test(
-  'nouveau-symbols-check',
-  symbols_check,
-  args : [
-    '--lib', libdrm_nouveau,
-    '--symbols-file', files('nouveau-symbols.txt'),
-    '--nm', prog_nm.path(),
-  ],
+  'nouveau-symbol-check',
+  prog_bash,
+  env : env_test,
+  args : [files('nouveau-symbol-check'), libdrm_nouveau]
 )

@@ -64,15 +64,23 @@ hash = executable(
   c_args : libdrm_c_args,
 )
 
+random = executable(
+  'random',
+  files('random.c'),
+  include_directories : [inc_root, inc_drm],
+  link_with : libdrm,
+  c_args : libdrm_c_args,
+)
+
 drmdevice = executable(
   'drmdevice',
   files('drmdevice.c'),
   include_directories : [inc_root, inc_drm],
   link_with : libdrm,
   c_args : libdrm_c_args,
-  install : with_install_tests,
 )
 
+test('random', random, timeout : 240)
 test('hash', hash)
 test('drmsl', drmsl)
 test('drmdevice', drmdevice)

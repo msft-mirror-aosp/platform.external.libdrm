@@ -58,7 +58,6 @@
 #define VM_TESTS_STR "VM Tests"
 #define RAS_TESTS_STR "RAS Tests"
 #define SYNCOBJ_TIMELINE_TESTS_STR "SYNCOBJ TIMELINE Tests"
-#define SECURITY_TESTS_STR "Security Tests"
 
 /**
  *  Open handles for amdgpu devices
@@ -131,12 +130,6 @@ static CU_SuiteInfo suites[] = {
 		.pCleanupFunc = suite_syncobj_timeline_tests_clean,
 		.pTests = syncobj_timeline_tests,
 	},
-	{
-		.pName = SECURITY_TESTS_STR,
-		.pInitFunc = suite_security_tests_init,
-		.pCleanupFunc = suite_security_tests_clean,
-		.pTests = security_tests,
-	},
 
 	CU_SUITE_INFO_NULL,
 };
@@ -156,7 +149,7 @@ static CU_BOOL always_active()
 static Suites_Active_Status suites_active_stat[] = {
 		{
 			.pName = BASIC_TESTS_STR,
-			.pActive = suite_basic_tests_enable,
+			.pActive = always_active,
 		},
 		{
 			.pName = BO_TESTS_STR,
@@ -194,10 +187,6 @@ static Suites_Active_Status suites_active_stat[] = {
 			.pName = SYNCOBJ_TIMELINE_TESTS_STR,
 			.pActive = suite_syncobj_timeline_tests_enable,
 		},
-		{
-			.pName = SECURITY_TESTS_STR,
-			.pActive = suite_security_tests_enable,
-		},
 };
 
 
@@ -213,41 +202,43 @@ static void display_test_suites(void)
 	CU_pSuite pSuite = NULL;
 	CU_pTest  pTest  = NULL;
 
-	printf("%5s: %2s: %8s: %s\n", "What", "ID", "Status", "Name");
+	printf("Suites\n");
 
 	for (iSuite = 0; suites[iSuite].pName != NULL; iSuite++) {
 
 		pSuite = CU_get_suite_by_index((unsigned int) iSuite + 1,
-					       CU_get_registry());
+						      CU_get_registry());
 
 		if (!pSuite) {
 			fprintf(stderr, "Invalid suite id : %d\n", iSuite + 1);
 			continue;
 		}
 
-		printf("Suite: %2d: %8s: %s\n",
-		       iSuite + 1,
-		       pSuite->fActive ? "ENABLED" : "DISABLED",
-		       suites[iSuite].pName);
+		printf("Suite id = %d: Name '%s status: %s'\n",
+				iSuite + 1, suites[iSuite].pName,
+				pSuite->fActive ? "ENABLED" : "DISABLED");
 
-		if (!pSuite->fActive)
-			continue;
+
 
 		for (iTest = 0; suites[iSuite].pTests[iTest].pName != NULL;
-		     iTest++) {
+			iTest++) {
+
 			pTest = CU_get_test_by_index((unsigned int) iTest + 1,
-						     pSuite);
+									pSuite);
+
 			if (!pTest) {
 				fprintf(stderr, "Invalid test id : %d\n", iTest + 1);
 				continue;
 			}
-			printf(" Test: %2d: %8s: %s\n",
-			       iTest + 1,
-			       pSuite->fActive && pTest->fActive ? "ENABLED" : "DISABLED",
-			       suites[iSuite].pTests[iTest].pName);
+
+			printf("Test id %d: Name: '%s status: %s'\n", iTest + 1,
+					suites[iSuite].pTests[iTest].pName,
+					pSuite->fActive && pTest->fActive ?
+						     "ENABLED" : "DISABLED");
 		}
 	}
 }
+
 
 /** Help string for command line parameters */
 static const char usage[] =
@@ -461,41 +452,6 @@ static void amdgpu_disable_suites()
 				"sdma ring block test (set amdgpu.lockup_timeout=50)", CU_FALSE))
 		fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 
-	/* This test was ran on GFX9 only */
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(DEADLOCK_TESTS_STR,
-				"gfx ring bad dispatch test (set amdgpu.lockup_timeout=50)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
-	/* This test was ran on GFX9 only */
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(DEADLOCK_TESTS_STR,
-				"compute ring bad dispatch test (set amdgpu.lockup_timeout=50,50)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
-	/* This test was ran on GFX9 only */
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(DEADLOCK_TESTS_STR,
-				"gfx ring bad slow dispatch test (set amdgpu.lockup_timeout=50)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
-	/* This test was ran on GFX9 only */
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(DEADLOCK_TESTS_STR,
-				"compute ring bad slow dispatch test (set amdgpu.lockup_timeout=50,50)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(DEADLOCK_TESTS_STR,
-				"gfx ring bad draw test (set amdgpu.lockup_timeout=50)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
-	/* This test was ran on GFX9 only */
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(DEADLOCK_TESTS_STR,
-				"gfx ring slow bad draw test (set amdgpu.lockup_timeout=50)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
 	if (amdgpu_set_test_active(BO_TESTS_STR, "Metadata", CU_FALSE))
 		fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 
@@ -508,21 +464,13 @@ static void amdgpu_disable_suites()
 			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 
 	/* This test was ran on GFX9 only */
-	if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV) {
-		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Dispatch Test (GFX)", CU_FALSE))
+	if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
+		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Dispatch Test", CU_FALSE))
 			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Dispatch Test (Compute)", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-	}
 
 	/* This test was ran on GFX9 only */
 	if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
 		if (amdgpu_set_test_active(BASIC_TESTS_STR, "Draw Test", CU_FALSE))
-			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
-
-	/* This test was ran on GFX9 only */
-	//if (family_id < AMDGPU_FAMILY_AI || family_id > AMDGPU_FAMILY_RV)
-		if (amdgpu_set_test_active(BASIC_TESTS_STR, "GPU reset Test", CU_FALSE))
 			fprintf(stderr, "test deactivation failed - %s\n", CU_get_error_msg());
 }
 

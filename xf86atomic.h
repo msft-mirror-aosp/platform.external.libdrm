@@ -54,7 +54,6 @@ typedef struct {
 #endif
 
 #if HAVE_LIB_ATOMIC_OPS
-#define AO_REQUIRE_CAS
 #include <atomic_ops.h>
 
 #define HAS_ATOMIC_OPS 1
