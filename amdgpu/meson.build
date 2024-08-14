@@ -36,8 +36,8 @@ libdrm_amdgpu = library(
   ],
   include_directories : [inc_root, inc_drm],
   link_with : libdrm,
-  dependencies : [dep_pthread_stubs, dep_atomic_ops, dep_rt],
-  version : '1.0.0',
+  dependencies : [dep_threads, dep_atomic_ops, dep_rt],
+  version : '1.@0@.0'.format(patch_ver),
   install : true,
 )
 
@@ -65,6 +65,6 @@ test(
   args : [
     '--lib', libdrm_amdgpu,
     '--symbols-file', files('amdgpu-symbols.txt'),
-    '--nm', prog_nm.path(),
+    '--nm', prog_nm.full_path(),
   ],
 )

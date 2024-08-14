@@ -1,3 +1,4 @@
+nouveau_bo_make_global
 nouveau_bo_map
 nouveau_bo_name_get
 nouveau_bo_name_ref
@@ -12,6 +13,7 @@ nouveau_bufctx_mthd
 nouveau_bufctx_new
 nouveau_bufctx_refn
 nouveau_bufctx_reset
+nouveau_check_dead_channel
 nouveau_client_del
 nouveau_client_new
 nouveau_device_del

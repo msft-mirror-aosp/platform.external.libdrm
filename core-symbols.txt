@@ -70,6 +70,7 @@ drmGetLibVersion
 drmGetLock
 drmGetMagic
 drmGetMap
+drmGetNodeTypeFromDevId
 drmGetNodeTypeFromFd
 drmGetPrimaryDeviceNameFromFd
 drmGetRenderDeviceNameFromFd
@@ -103,11 +104,15 @@ drmModeAtomicGetCursor
 drmModeAtomicMerge
 drmModeAtomicSetCursor
 drmModeAttachMode
+drmModeCloseFB
+drmModeConnectorGetPossibleCrtcs
 drmModeConnectorSetProperty
+drmModeCreateDumbBuffer
 drmModeCreateLease
 drmModeCreatePropertyBlob
 drmModeCrtcGetGamma
 drmModeCrtcSetGamma
+drmModeDestroyDumbBuffer
 drmModeDestroyPropertyBlob
 drmModeDetachMode
 drmModeDirtyFB
@@ -126,6 +131,7 @@ drmModeFreePropertyBlob
 drmModeFreeResources
 drmModeGetConnector
 drmModeGetConnectorCurrent
+drmModeGetConnectorTypeName
 drmModeGetCrtc
 drmModeGetEncoder
 drmModeGetFB
@@ -137,6 +143,7 @@ drmModeGetProperty
 drmModeGetPropertyBlob
 drmModeGetResources
 drmModeListLessees
+drmModeMapDumbBuffer
 drmModeMoveCursor
 drmModeObjectGetProperties
 drmModeObjectSetProperty
@@ -182,6 +189,7 @@ drmSLNext
 drmSwitchToContext
 drmSyncobjCreate
 drmSyncobjDestroy
+drmSyncobjEventfd
 drmSyncobjExportSyncFile
 drmSyncobjFDToHandle
 drmSyncobjHandleToFD
@@ -201,3 +209,4 @@ drmUpdateDrawableInfo
 drmWaitVBlank
 drmGetFormatModifierName
 drmGetFormatModifierVendor
+drmGetFormatName

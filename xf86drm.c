@@ -60,7 +60,6 @@
 #if HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
-#include <math.h>
 #include <inttypes.h>
 
 #if defined(__FreeBSD__)
@@ -175,11 +174,15 @@ drmGetFormatModifierNameFromAmd(uint64_t modifier);
 static char *
 drmGetFormatModifierNameFromAmlogic(uint64_t modifier);
 
+static char *
+drmGetFormatModifierNameFromVivante(uint64_t modifier);
+
 static const struct drmVendorInfo modifier_format_vendor_table[] = {
     { DRM_FORMAT_MOD_VENDOR_ARM, drmGetFormatModifierNameFromArm },
     { DRM_FORMAT_MOD_VENDOR_NVIDIA, drmGetFormatModifierNameFromNvidia },
     { DRM_FORMAT_MOD_VENDOR_AMD, drmGetFormatModifierNameFromAmd },
     { DRM_FORMAT_MOD_VENDOR_AMLOGIC, drmGetFormatModifierNameFromAmlogic },
+    { DRM_FORMAT_MOD_VENDOR_VIVANTE, drmGetFormatModifierNameFromVivante },
 };
 
 #ifndef AFBC_FORMAT_MOD_MODE_VALUE_MASK
@@ -261,6 +264,7 @@ drmGetAfbcFormatModifierNameFromArm(uint64_t modifier, FILE *fp)
 static bool
 drmGetAfrcFormatModifierNameFromArm(uint64_t modifier, FILE *fp)
 {
+    bool scan_layout;
     for (unsigned int i = 0; i < 2; ++i) {
         uint64_t coding_unit_block =
           (modifier >> (i * 4)) & AFRC_FORMAT_MOD_CU_SIZE_MASK;
@@ -292,7 +296,7 @@ drmGetAfrcFormatModifierNameFromArm(uint64_t modifier, FILE *fp)
         }
     }
 
-    bool scan_layout =
+    scan_layout =
         (modifier & AFRC_FORMAT_MOD_LAYOUT_SCAN) == AFRC_FORMAT_MOD_LAYOUT_SCAN;
     if (scan_layout) {
         fprintf(fp, "SCAN");
@@ -473,6 +477,9 @@ drmGetFormatModifierNameFromAmd(uint64_t modifier)
     case AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS:
         str_tile_version = "GFX10_RBPLUS";
         break;
+    case AMD_FMT_MOD_TILE_VER_GFX11:
+        str_tile_version = "GFX11";
+        break;
     }
 
     if (str_tile_version) {
@@ -499,6 +506,9 @@ drmGetFormatModifierNameFromAmd(uint64_t modifier)
         break;
     case AMD_FMT_MOD_TILE_GFX9_64K_R_X:
         str_tile = "GFX9_64K_R_X";
+        break;
+    case AMD_FMT_MOD_TILE_GFX11_256K_R_X:
+        str_tile = "GFX11_256K_R_X";
         break;
     }
 
@@ -544,6 +554,70 @@ drmGetFormatModifierNameFromAmlogic(uint64_t modifier)
 
     asprintf(&mod_amlogic, "FBC,LAYOUT=%s,OPTIONS=%s", layout_str, opts_str);
     return mod_amlogic;
+}
+
+static char *
+drmGetFormatModifierNameFromVivante(uint64_t modifier)
+{
+    const char *color_tiling, *tile_status, *compression;
+    char *mod_vivante = NULL;
+
+    switch (modifier & VIVANTE_MOD_TS_MASK) {
+    case 0:
+        tile_status = "";
+        break;
+    case VIVANTE_MOD_TS_64_4:
+        tile_status = ",TS=64B_4";
+        break;
+    case VIVANTE_MOD_TS_64_2:
+        tile_status = ",TS=64B_2";
+        break;
+    case VIVANTE_MOD_TS_128_4:
+        tile_status = ",TS=128B_4";
+        break;
+    case VIVANTE_MOD_TS_256_4:
+        tile_status = ",TS=256B_4";
+        break;
+    default:
+        tile_status = ",TS=UNKNOWN";
+        break;
+    }
+
+    switch (modifier & VIVANTE_MOD_COMP_MASK) {
+    case 0:
+        compression = "";
+        break;
+    case VIVANTE_MOD_COMP_DEC400:
+        compression = ",COMP=DEC400";
+        break;
+    default:
+        compression = ",COMP=UNKNOWN";
+	break;
+    }
+
+    switch (modifier & ~VIVANTE_MOD_EXT_MASK) {
+    case 0:
+        color_tiling = "LINEAR";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_TILED:
+        color_tiling = "TILED";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_SUPER_TILED:
+        color_tiling = "SUPER_TILED";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED:
+        color_tiling = "SPLIT_TILED";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED:
+        color_tiling = "SPLIT_SUPER_TILED";
+	break;
+    default:
+        color_tiling = "UNKNOWN";
+	break;
+    }
+
+    asprintf(&mod_vivante, "%s%s%s", color_tiling, tile_status, compression);
+    return mod_vivante;
 }
 
 static unsigned log2_int(unsigned x)
@@ -754,8 +828,6 @@ static const char *drmGetDeviceName(int type)
     switch (type) {
     case DRM_NODE_PRIMARY:
         return DRM_DEV_NAME;
-    case DRM_NODE_CONTROL:
-        return DRM_CONTROL_DEV_NAME;
     case DRM_NODE_RENDER:
         return DRM_RENDER_DEV_NAME;
     }
@@ -848,7 +920,7 @@ wait_for_udev:
     }
 #endif
 
-    fd = open(buf, O_RDWR | O_CLOEXEC, 0);
+    fd = open(buf, O_RDWR | O_CLOEXEC);
     drmMsg("drmOpenDevice: open result is %d, (%s)\n",
            fd, fd < 0 ? strerror(errno) : "OK");
     if (fd >= 0)
@@ -868,7 +940,7 @@ wait_for_udev:
             chmod(buf, devmode);
         }
     }
-    fd = open(buf, O_RDWR | O_CLOEXEC, 0);
+    fd = open(buf, O_RDWR | O_CLOEXEC);
     drmMsg("drmOpenDevice: open result is %d, (%s)\n",
            fd, fd < 0 ? strerror(errno) : "OK");
     if (fd >= 0)
@@ -906,7 +978,7 @@ static int drmOpenMinor(int minor, int create, int type)
         return -EINVAL;
 
     sprintf(buf, dev_name, DRM_DIR_NAME, minor);
-    if ((fd = open(buf, O_RDWR | O_CLOEXEC, 0)) >= 0)
+    if ((fd = open(buf, O_RDWR | O_CLOEXEC)) >= 0)
         return fd;
     return -errno;
 }
@@ -951,8 +1023,6 @@ static int drmGetMinorBase(int type)
     switch (type) {
     case DRM_NODE_PRIMARY:
         return 0;
-    case DRM_NODE_CONTROL:
-        return 64;
     case DRM_NODE_RENDER:
         return 128;
     default:
@@ -973,8 +1043,6 @@ static int drmGetMinorType(int major, int minor)
         // If not in /dev/drm/ we have the type in the name
         if (sscanf(name, "dri/card%d\n", &id) >= 1)
            return DRM_NODE_PRIMARY;
-        else if (sscanf(name, "dri/control%d\n", &id) >= 1)
-           return DRM_NODE_CONTROL;
         else if (sscanf(name, "dri/renderD%d\n", &id) >= 1)
            return DRM_NODE_RENDER;
         return -1;
@@ -982,19 +1050,20 @@ static int drmGetMinorType(int major, int minor)
 
     minor = id;
 #endif
-    int type = minor >> 6;
+    char path[DRM_NODE_NAME_MAX];
+    const char *dev_name;
+    int i;
 
-    if (minor < 0)
-        return -1;
-
-    switch (type) {
-    case DRM_NODE_PRIMARY:
-    case DRM_NODE_CONTROL:
-    case DRM_NODE_RENDER:
-        return type;
-    default:
-        return -1;
+    for (i = DRM_NODE_PRIMARY; i < DRM_NODE_MAX; i++) {
+        dev_name = drmGetDeviceName(i);
+        if (!dev_name)
+           continue;
+        snprintf(path, sizeof(path), dev_name, DRM_DIR_NAME, minor);
+        if (!access(path, F_OK))
+           return i;
     }
+
+    return -1;
 }
 
 static const char *drmGetMinorName(int type)
@@ -1002,8 +1071,6 @@ static const char *drmGetMinorName(int type)
     switch (type) {
     case DRM_NODE_PRIMARY:
         return DRM_PRIMARY_MINOR_NAME;
-    case DRM_NODE_CONTROL:
-        return DRM_CONTROL_MINOR_NAME;
     case DRM_NODE_RENDER:
         return DRM_RENDER_MINOR_NAME;
     default:
@@ -1134,7 +1201,7 @@ static int drmOpenByName(const char *name, int type)
         int  retcode;
 
         sprintf(proc_name, "/proc/dri/%d/name", i);
-        if ((fd = open(proc_name, O_RDONLY, 0)) >= 0) {
+        if ((fd = open(proc_name, O_RDONLY)) >= 0) {
             retcode = read(fd, buf, sizeof(buf)-1);
             close(fd);
             if (retcode) {
@@ -1190,7 +1257,7 @@ drm_public int drmOpen(const char *name, const char *busid)
  *
  * \param name driver name. Not referenced if bus ID is supplied.
  * \param busid bus ID. Zero if not known.
- * \param type the device node type to open, PRIMARY, CONTROL or RENDER
+ * \param type the device node type to open, PRIMARY or RENDER
  *
  * \return a file descriptor on success, or a negative value on error.
  *
@@ -1223,7 +1290,7 @@ drm_public int drmOpenWithType(const char *name, const char *busid, int type)
 
 drm_public int drmOpenControl(int minor)
 {
-    return drmOpenMinor(minor, 0, DRM_NODE_CONTROL);
+    return -EINVAL;
 }
 
 drm_public int drmOpenRender(int minor)
@@ -3629,12 +3696,9 @@ static int get_sysctl_pci_bus_info(int maj, int min, drmPciBusInfoPtr info)
     switch (type) {
     case DRM_NODE_PRIMARY:
          break;
-    case DRM_NODE_CONTROL:
-         id -= 64;
-         break;
     case DRM_NODE_RENDER:
          id -= 128;
-          break;
+         break;
     }
     if (id < 0)
         return -EINVAL;
@@ -3746,10 +3810,6 @@ drm_public int drmDevicesEqual(drmDevicePtr a, drmDevicePtr b)
 
 static int drmGetNodeType(const char *name)
 {
-    if (strncmp(name, DRM_CONTROL_MINOR_NAME,
-        sizeof(DRM_CONTROL_MINOR_NAME ) - 1) == 0)
-        return DRM_NODE_CONTROL;
-
     if (strncmp(name, DRM_RENDER_MINOR_NAME,
         sizeof(DRM_RENDER_MINOR_NAME) - 1) == 0)
         return DRM_NODE_RENDER;
@@ -3891,7 +3951,7 @@ static int drmParsePciDeviceInfo(int maj, int min,
     if (get_sysctl_pci_bus_info(maj, min, &info) != 0)
         return -EINVAL;
 
-    fd = open("/dev/pci", O_RDONLY, 0);
+    fd = open("/dev/pci", O_RDONLY);
     if (fd < 0)
         return -errno;
 
@@ -4410,14 +4470,24 @@ process_device(drmDevicePtr *device, const char *d_name,
 {
     struct stat sbuf;
     char node[PATH_MAX + 1];
-    int node_type, subsystem_type;
+    int node_type, subsystem_type, written;
     unsigned int maj, min;
+    const int max_node_length = ALIGN(drmGetMaxNodeName(), sizeof(void *));
 
     node_type = drmGetNodeType(d_name);
     if (node_type < 0)
         return -1;
 
-    snprintf(node, PATH_MAX, "%s/%s", DRM_DIR_NAME, d_name);
+    written = snprintf(node, PATH_MAX, "%s/%s", DRM_DIR_NAME, d_name);
+    if (written < 0)
+        return -1;
+
+    /* anything longer than this will be truncated in drmDeviceAlloc.
+     * Account for NULL byte
+     */
+    if (written + 1 > max_node_length)
+        return -1;
+
     if (stat(node, &sbuf))
         return -1;
 
@@ -4524,6 +4594,8 @@ drm_public int drmGetDeviceFromDevId(dev_t find_rdev, uint32_t flags, drmDeviceP
     const char      *dev_name;
     int              node_type, subsystem_type;
     int              maj, min, n, ret;
+    const int        max_node_length = ALIGN(drmGetMaxNodeName(), sizeof(void *));
+    struct stat      sbuf;
 
     if (device == NULL)
         return -EINVAL;
@@ -4542,9 +4614,14 @@ drm_public int drmGetDeviceFromDevId(dev_t find_rdev, uint32_t flags, drmDeviceP
     if (!dev_name)
         return -EINVAL;
 
+    /* anything longer than this will be truncated in drmDeviceAlloc.
+     * Account for NULL byte
+     */
     n = snprintf(node, PATH_MAX, dev_name, DRM_DIR_NAME, min);
     if (n == -1 || n >= PATH_MAX)
       return -errno;
+    if (n + 1 > max_node_length)
+        return -EINVAL;
     if (stat(node, &sbuf))
         return -EINVAL;
 
@@ -4624,6 +4701,23 @@ drm_public int drmGetDeviceFromDevId(dev_t find_rdev, uint32_t flags, drmDeviceP
         return -ENODEV;
     return 0;
 #endif
+}
+
+drm_public int drmGetNodeTypeFromDevId(dev_t devid)
+{
+    int maj, min, node_type;
+
+    maj = major(devid);
+    min = minor(devid);
+
+    if (!drmNodeIsDRM(maj, min))
+        return -EINVAL;
+
+    node_type = drmGetMinorType(maj, min);
+    if (node_type == -1)
+        return -ENODEV;
+
+    return node_type;
 }
 
 /**
@@ -5043,6 +5137,20 @@ drm_public int drmSyncobjTransfer(int fd,
     return ret;
 }
 
+drm_public int drmSyncobjEventfd(int fd, uint32_t handle, uint64_t point, int ev_fd,
+                                 uint32_t flags)
+{
+    struct drm_syncobj_eventfd args;
+
+    memclear(args);
+    args.handle = handle;
+    args.point = point;
+    args.fd = ev_fd;
+    args.flags = flags;
+
+    return drmIoctl(fd, DRM_IOCTL_SYNCOBJ_EVENTFD, &args);
+}
+
 static char *
 drmGetFormatModifierFromSimpleTokens(uint64_t modifier)
 {
@@ -5104,4 +5212,44 @@ drmGetFormatModifierName(uint64_t modifier)
         return drmGetFormatModifierFromSimpleTokens(modifier);
 
     return modifier_found;
+}
+
+/**
+ * Get a human-readable name for a DRM FourCC format.
+ *
+ * \param format The format.
+ * \return A malloc'ed string containing the format name. Caller is responsible
+ * for freeing it.
+ */
+drm_public char *
+drmGetFormatName(uint32_t format)
+{
+    char *str, code[5];
+    const char *be;
+    size_t str_size, i;
+
+    be = (format & DRM_FORMAT_BIG_ENDIAN) ? "_BE" : "";
+    format &= ~DRM_FORMAT_BIG_ENDIAN;
+
+    if (format == DRM_FORMAT_INVALID)
+        return strdup("INVALID");
+
+    code[0] = (char) ((format >> 0) & 0xFF);
+    code[1] = (char) ((format >> 8) & 0xFF);
+    code[2] = (char) ((format >> 16) & 0xFF);
+    code[3] = (char) ((format >> 24) & 0xFF);
+    code[4] = '\0';
+
+    /* Trim spaces at the end */
+    for (i = 3; i > 0 && code[i] == ' '; i--)
+        code[i] = '\0';
+
+    str_size = strlen(code) + strlen(be) + 1;
+    str = malloc(str_size);
+    if (!str)
+        return NULL;
+
+    snprintf(str, str_size, "%s%s", code, be);
+
+    return str;
 }

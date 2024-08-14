@@ -12,7 +12,7 @@
 # main repository, it's recommended to remove the image from the source
 # repository's container registry, so that the image from the main
 # repository's registry will be used there as well.
-.templates_sha: &template_sha 567700e483aabed992d0a4fea84994a0472deff6 # see https://docs.gitlab.com/ee/ci/yaml/#includefile
+.templates_sha: &template_sha b61a03cabbf308e81289f7aaaf0b5a80a34ffb99 # see https://docs.gitlab.com/ee/ci/yaml/#includefile
 
 include:
   - project: 'freedesktop/ci-templates'
@@ -39,12 +39,11 @@ stages:
 .os-debian:
   variables:
     BUILD_OS: debian
-    FDO_DISTRIBUTION_VERSION: buster
+    FDO_DISTRIBUTION_VERSION: bookworm
     FDO_DISTRIBUTION_PACKAGES: 'build-essential docbook-xsl libatomic-ops-dev libcairo2-dev libcunit1-dev libpciaccess-dev meson ninja-build pkg-config python3 python3-pip python3-wheel python3-setuptools python3-docutils valgrind'
-    FDO_DISTRIBUTION_EXEC: 'pip3 install meson==0.53.0'
     # bump this tag every time you change something which requires rebuilding the
     # base image
-    FDO_DISTRIBUTION_TAG: "2022-01-19.0"
+    FDO_DISTRIBUTION_TAG: "2024-06-25.0"
 
 .debian-x86_64:
   extends:
@@ -67,11 +66,11 @@ stages:
 .os-freebsd:
   variables:
     BUILD_OS: freebsd
-    FDO_DISTRIBUTION_VERSION: "13.0"
-    FDO_DISTRIBUTION_PACKAGES: 'meson ninja pkgconf libpciaccess libpthread-stubs py38-docutils cairo'
+    FDO_DISTRIBUTION_VERSION: "14.1"
+    FDO_DISTRIBUTION_PACKAGES: 'meson ninja pkgconf libpciaccess py39-docutils cairo'
     # bump this tag every time you change something which requires rebuilding the
     # base image
-    FDO_DISTRIBUTION_TAG: "2021-11-10.1"
+    FDO_DISTRIBUTION_TAG: "2026-26-25.0"
 
 .freebsd-x86_64:
   extends:
@@ -205,9 +204,6 @@ x86_64-freebsd-container_prep:
         -D radeon=true
         -D tegra=true
         -D udev=true
-        -D valgrind=auto
-        -D vc4=true
-        -D vmwgfx=true
     - ninja -C build
     - ninja -C build test
     - DESTDIR=$PWD/install ninja -C build install
