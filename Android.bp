@@ -42,6 +42,8 @@ build = ["Android.sources.bp"]
 cc_defaults {
     name: "libdrm_defaults",
     cflags: [
+        "-D_GNU_SOURCE",
+
         // XXX: Consider moving these to config.h analogous to autoconf.
         "-DMAJOR_IN_SYSMACROS=1",
         "-DHAVE_VISIBILITY=1",
@@ -52,7 +54,6 @@ cc_defaults {
         "-Wno-deprecated-declarations",
         "-Wno-format",
         "-Wno-gnu-variable-sized-type-not-at-end",
-        "-Wno-implicit-function-declaration",
         "-Wno-int-conversion",
         "-Wno-missing-field-initializers",
         "-Wno-pointer-arith",
