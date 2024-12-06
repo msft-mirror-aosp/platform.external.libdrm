@@ -42,6 +42,8 @@ build = ["Android.sources.bp"]
 cc_defaults {
     name: "libdrm_defaults",
     cflags: [
+        "-D_GNU_SOURCE",
+
         // XXX: Consider moving these to config.h analogous to autoconf.
         "-DMAJOR_IN_SYSMACROS=1",
         "-DHAVE_VISIBILITY=1",
@@ -52,7 +54,6 @@ cc_defaults {
         "-Wno-deprecated-declarations",
         "-Wno-format",
         "-Wno-gnu-variable-sized-type-not-at-end",
-        "-Wno-implicit-function-declaration",
         "-Wno-int-conversion",
         "-Wno-missing-field-initializers",
         "-Wno-pointer-arith",
@@ -77,6 +78,14 @@ cc_library_headers {
     ],
 }
 
+genrule {
+    name: "generated_static_table_fourcc_h",
+    out: ["generated_static_table_fourcc.h"],
+    srcs: ["include/drm/drm_fourcc.h"],
+    tool_files: ["gen_table_fourcc.py"],
+    cmd: "python3 $(location gen_table_fourcc.py) $(in) $(out)",
+}
+
 // Library for the device
 cc_library {
     name: "libdrm",
@@ -93,10 +102,11 @@ cc_library {
         "libdrm_sources",
     ],
 
-    export_include_dirs: [
-        "include/drm",
-        "android",
+    generated_headers: [
+        "generated_static_table_fourcc_h",
     ],
+
+    export_include_dirs: ["include/drm", "android"],
 
     cflags: [
         "-Wno-enum-conversion",
@@ -148,6 +158,6 @@ rust_bindgen {
         "//apex_available:platform",
     ],
     visibility: [
-        "//external/rust/crates/drm-ffi",
+        "//external/rust/android-crates-io/crates/drm-ffi",
     ],
 }
