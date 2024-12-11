@@ -26,7 +26,7 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.122',
+  version : '2.4.124',
   license : 'MIT',
   meson_version : '>= 0.59',
   default_options : ['buildtype=debugoptimized', 'c_std=c11'],
@@ -178,7 +178,7 @@ else
 endif
 
 # The header is not required on Linux, and is in fact deprecated in glibc 2.30+
-if ['linux'].contains(host_machine.system())
+if host_machine.system() == 'linux'
   config.set10('HAVE_SYS_SYSCTL_H', false)
 else
   # From Niclas Zeising:
@@ -250,6 +250,10 @@ config.set10('_GNU_SOURCE', true)
 
 if target_machine.endian() == 'big'
   config.set('HAVE_BIG_ENDIAN', 1)
+endif
+
+if android
+  config.set('BIONIC_IOCTL_NO_SIGNEDNESS_OVERLOAD', 1)
 endif
 
 config_file = configure_file(
