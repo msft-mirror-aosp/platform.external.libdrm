@@ -3,3 +3,4 @@
 adelva@google.com
 john.stultz@linaro.org
 seanpaul@google.com
+include platform/system/core:/janitors/OWNERS #{LAST_RESORT_SUGGESTION}
