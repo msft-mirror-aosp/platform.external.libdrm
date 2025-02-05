@@ -93,6 +93,7 @@ cc_library {
     host_supported: true,
     vendor_available: true,
     product_available: true,
+    min_sdk_version: "34",
     apex_available: [
         "//apex_available:platform",
         "//apex_available:anyapex",
@@ -106,7 +107,10 @@ cc_library {
         "generated_static_table_fourcc_h",
     ],
 
-    export_include_dirs: ["include/drm", "android"],
+    export_include_dirs: [
+        "include/drm",
+        "android",
+    ],
 
     cflags: [
         "-Wno-enum-conversion",
