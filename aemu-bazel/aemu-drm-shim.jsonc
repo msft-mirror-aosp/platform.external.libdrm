@@ -1,0 +1,22 @@
+{
+  "shims": [
+    {
+      "target": ".*",
+      "shims": {
+        "restrict_to": "cc_library|cc_binary|cc_interface_binary",
+        // Our sysroot is too old so we need to introduce these
+        "+copts": [
+          // asprintf, vasprintf
+          "-Wno-implicit-function-declaration"
+        ]
+      }
+    }
+  ],
+  // The actual set of targets you wish to generate bazel targets for.
+  // These are the targets that will be exported.
+  "export": [
+    "drm"
+  ],
+  "exclude": []
+}
+
