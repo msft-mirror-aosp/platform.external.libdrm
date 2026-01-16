@@ -3,3 +3,6 @@
 adelva@google.com
 john.stultz@linaro.org
 seanpaul@google.com
+
+per-file BUILD.bazel = file:aemu-bazel/OWNERS
+per-file README.aemu.md = file:aemu-bazel/OWNERS
