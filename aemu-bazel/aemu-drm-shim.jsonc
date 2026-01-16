@@ -10,6 +10,12 @@
           "-Wno-implicit-function-declaration"
         ]
       }
+    },
+    {
+      "target": "^libdrm$",
+      "shims": {
+        "name": "drm"
+      }
     }
   ],
   // The actual set of targets you wish to generate bazel targets for.

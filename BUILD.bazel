@@ -3,12 +3,19 @@
 # Using the experimental bazel build plugin.
 # It targets linux-x86_64
 
-load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
 
-cc_binary(
+cc_library(
     name = "drm",
     srcs = [
+        "xf86drm.c",
+        "xf86drmHash.c",
+        "xf86drmMode.c",
+        "xf86drmRandom.c",
+        "xf86drmSL.c",
+    ],
+    hdrs = [
         "generated_static_table_fourcc.h",
         "include/drm/drm.h",
         "include/drm/drm_fourcc.h",
@@ -16,15 +23,10 @@ cc_binary(
         "libdrm_macros.h",
         "platform/linux-x86_64/config.h",
         "util_math.h",
-        "xf86drm.c",
         "xf86drm.h",
-        "xf86drmHash.c",
         "xf86drmHash.h",
-        "xf86drmMode.c",
         "xf86drmMode.h",
-        "xf86drmRandom.c",
         "xf86drmRandom.h",
-        "xf86drmSL.c",
     ],
     copts = ["-Wno-implicit-function-declaration"],
     defines = ["_FILE_OFFSET_BITS=64"],
@@ -34,7 +36,6 @@ cc_binary(
         ".",
         "platform/linux-x86_64",
     ],
-    linkshared = True,
 )
 
 genrule(
