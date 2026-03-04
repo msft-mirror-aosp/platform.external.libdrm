@@ -4,7 +4,26 @@
 # It targets linux-x86_64
 
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_license//rules:license.bzl", "license")
 load("@rules_python//python:defs.bzl", "py_binary")
+
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = ["//visibility:public"],
+)
+
+license(
+    name = "license",
+    package_name = "libdrm",
+    copyright_notice = "Copyright 1999 Precision Insight, Inc., Cedar Park, Texas. Copyright 2000 VA Linux Systems, Inc., Sunnyvale, California.",
+    license_kinds = ["@rules_license//licenses/spdx:MIT"],
+    license_text = "LICENSE",
+    visibility = ["//visibility:public"],
+)
+
+licenses(["notice"])
+
+exports_files(["LICENSE"])
 
 cc_library(
     name = "drm",
