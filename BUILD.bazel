@@ -48,7 +48,12 @@ cc_library(
         "xf86drmRandom.h",
     ],
     copts = ["-Wno-implicit-function-declaration"],
-    defines = ["_FILE_OFFSET_BITS=64"],
+    defines = [
+        "_FILE_OFFSET_BITS=64",
+    ] + select({
+        "@bazel_tools//src/conditions:linux": ["MAJOR_IN_SYSMACROS=1"],
+        "//conditions:default": [],
+    }),
     # buildifier: leave-alone
     includes = [
         "include/drm",
